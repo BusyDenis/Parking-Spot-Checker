@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --panel: #ffffff;
+            --panel-soft: #eef3ff;
+            --text: #172033;
+            --muted: #667085;
+            --line: #d8e0ee;
+            --primary: #1d4ed8;
+            --primary-dark: #153eaf;
+            --success: #0f9d58;
+            --shadow: 0 18px 45px rgba(23, 32, 51, 0.08);
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28%),
+                linear-gradient(180deg, #f8fbff 0%, #eef2f8 100%);
+        }
+
+        .page {
+            width: min(960px, calc(100% - 32px));
+            margin: 32px auto;
+        }
+
+        .hero {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(30px, 5vw, 48px);
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 20px;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+            font: inherit;
+        }
+
+        form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button[type="submit"],
+        #locate-btn {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        #refresh-btn {
+            background: var(--panel-soft);
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+
+        .meta {
+            display: grid;
+            gap: 8px;
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: var(--panel-soft);
+            color: var(--primary-dark);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .helper {
+            margin: 0 0 18px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .parking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .parking-list li {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: #fff;
+        }
+
+        .lot-name {
+            margin: 0 0 6px;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .lot-meta {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .status-open {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .status-closed {
+            color: #b42318;
+            font-weight: 700;
+        }
+
+        @media (max-width: 820px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page {
+                width: min(100% - 20px, 960px);
+                margin: 16px auto;
+            }
+
+            .hero,
+            .card {
+                padding: 18px;
+            }
+
+            .results-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <section class="hero">
+            <h1>Parking App</h1>
+            <p>Find parking spots near your current location and filter them by walking radius.</p>
+        </section>
+
+        <section class="grid">
+            <aside class="card">
+                <h2>Search</h2>
+
+                <div class="field-group">
+                    <label for="location-input">Location</label>
+                    <input id="location-input" type="text" placeholder="Enter location">
+                </div>
+
+                <form action="/" method="GET">
+                    <label for="radius-select">Radius</label>
+                    <select id="radius-select" name="radius">
+                        <option value="50" {{if eq .Radius "50" }}selected{{end}}>50 m</option>
+                        <option value="300" {{if eq .Radius "300" }}selected{{end}}>300 m</option>
+                        <option value="750" {{if eq .Radius "750" }}selected{{end}}>750 m</option>
+                        <option value="1500" {{if eq .Radius "1500" }}selected{{end}}>1.5 km</option>
+                        <option value="3000" {{if eq .Radius "3000" }}selected{{end}}>3 km</option>
+                        <option value="10000" {{if eq .Radius "10000" }}selected{{end}}>10 km</option>
+                    </select>
+                    <input id="latitude-input" name="latitude" type="hidden">
+                    <input id="longitude-input" name="longitude" type="hidden">
+                    <button type="submit">Filter Results</button>
+                </form>
+
+                <div class="button-row">
+                    <button id="locate-btn" type="button">Use my location</button>
+                    <button id="refresh-btn" type="button">Refresh</button>
+                </div>
+
+                <div class="meta">
+                    <p id="api-status">Ready</p>
+                    <p id="geo-message"></p>
+                    <p>Last update: <span id="last-update">-</span></p>
+                </div>
+            </aside>
+
+            <section class="card">
+                <div class="results-header">
+                    <div>
+                        <h2>Parking Spots in Your Area</h2>
+                        <p class="helper">Click "Use my location" first, then apply a radius filter.</p>
+                    </div>
+                    <span class="badge">Selected radius: {{.Radius}} m</span>
+                </div>
+
+                {{if .Lots}}
+                <ul class="parking-list">
+                    {{range .Lots}}
+                    <li>
+                        <p class="lot-name">{{.Name}}</p>
+                        <p class="lot-meta">Free: {{.Free}} / {{.Total}}</p>
+                        <p class="lot-meta">
+                            Status:
+                            <span class="{{if eq .State "open"}}status-open{{else}}status-closed{{end}}">{{.State}}</span>
+                        </p>
+                        <p class="lot-meta">{{.Address}}</p>
+                    </li>
+                    {{end}}
+                </ul>
+                {{else}}
+                <p class="helper">No parking data found.</p>
+                {{end}}
+            </section>
+        </section>
+
+        <section class="card" style="margin-top:20px;">
+            <h2>Map</h2>
+            <div id="map" style="width:100%; height:420px; border-radius:10px;"></div>
+        </section>
+    </main>
+
+    <script>
+        const locateButton = document.getElementById("locate-btn");
+        const refreshButton = document.getElementById("refresh-btn");
+        const geoMessage = document.getElementById("geo-message");
+        const apiStatus = document.getElementById("api-status");
+        const lastUpdate = document.getElementById("last-update");
+        const latitudeInput = document.getElementById("latitude-input");
+        const longitudeInput = document.getElementById("longitude-input");
+
+            var map = L.map('map').setView([47.3769, 8.5417], 14);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // [Claude] Ask the browser for the user's GPS position and re-center the map on it.
+        // getCurrentPosition is async — the map loads first, then jumps to the user once granted.
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                map.setView([position.coords.latitude, position.coords.longitude], 14);
+            });
+        }
+
+        // [Claude] The Go template injects the filtered parking lots as a JSON array here.
+        // This means the data comes from the server — no extra API call needed from the browser.
+        var lots = {{.Lots | json}};
+
+        // [Claude] Loop over every lot and place a circle marker on the map.
+        // Green = open, red = closed. Clicking a marker shows name, free spots and status.
+        lots.forEach(function(lot) {
+            // Skip lots with missing coordinates to avoid map errors
+            if (lot.coords && lot.coords.lat && lot.coords.lng) {
+                var color = lot.state === "open" ? "green" : "red";
+                var marker = L.circleMarker([lot.coords.lat, lot.coords.lng], {
+                    radius: 10,
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.7
+                }).addTo(map);
+                marker.bindPopup(
+                    "<b>" + lot.name + "</b><br>" +
+                    "Free: " + lot.free + " / " + lot.total + "<br>" +
+                    "Status: " + lot.state
+                );
+            }
+        });
+        
+        function setCurrentTime() {
+            const now = new Date();
+            lastUpdate.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+
+        locateButton.addEventListener("click", () => {
+            if (!navigator.geolocation) {
+                geoMessage.textContent = "Geolocation is not supported in this browser.";
+                return;
+            }
+
+            geoMessage.textContent = "Checking your location...";
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    latitudeInput.value = latitude;
+                    longitudeInput.value = longitude;
+                    geoMessage.textContent = "Location found: " + latitude.toFixed(4) + ", " + longitude.toFixed(4);
+                    apiStatus.textContent = "Location ready";
+                },
+                () => {
+                    geoMessage.textContent = "Location access was denied.";
+                }
+            );
+        });
+
+        refreshButton.addEventListener("click", () => {
+            setCurrentTime();
+            apiStatus.textContent = "Refreshed";
+        });
+
+        setCurrentTime();
+    </script>
+</body>
+
+</html>
