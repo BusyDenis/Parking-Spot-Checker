@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -128,6 +129,10 @@ func distanceInMeters(lat1 float64, lng1 float64, lat2 float64, lng2 float64) fl
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
