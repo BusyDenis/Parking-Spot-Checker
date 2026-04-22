@@ -203,6 +203,16 @@
             font-weight: 700;
         }
 
+        .status-busy {
+            color: #d97706;
+            font-weight: 700;
+        }
+
+        .status-full {
+            color: #b42318;
+            font-weight: 700;
+        }
+
         @media (max-width: 820px) {
             .grid {
                 grid-template-columns: 1fr;
@@ -286,7 +296,7 @@
                         <p class="lot-meta">Free: {{.Free}} / {{.Total}}</p>
                         <p class="lot-meta">
                             Status:
-                            <span class="{{if eq .State "open"}}status-open{{else}}status-closed{{end}}">{{.State}}</span>
+                            <span class="status-{{.State}}">{{.State}}</span>
                         </p>
                         <p class="lot-meta">{{.Address}}</p>
                     </li>
@@ -329,11 +339,12 @@
         var lots = {{.Lots | json}};
 
         // [Claude] Loop over every lot and place a circle marker on the map.
-        // Green = open, red = closed. Clicking a marker shows name, free spots and status.
+        // green = open, orange = busy, red = full/closed. Clicking a marker shows name, free spots and status.
+        var stateColors = { open: "green", busy: "orange", full: "red", closed: "red" };
         lots.forEach(function(lot) {
             // Skip lots with missing coordinates to avoid map errors
             if (lot.coords && lot.coords.lat && lot.coords.lng) {
-                var color = lot.state === "open" ? "green" : "red";
+                var color = stateColors[lot.state] || "gray";
                 var marker = L.circleMarker([lot.coords.lat, lot.coords.lng], {
                     radius: 10,
                     color: color,

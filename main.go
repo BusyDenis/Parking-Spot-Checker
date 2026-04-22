@@ -56,7 +56,7 @@ var fixtureLots = []parkingLot{
 		State:   "open",
 	},
 	{
-		Name:    "Test Lot Normal",
+		Name:    "Test Lot Busy",
 		Address: "Paradeplatz 2, Zurich",
 		Coords:  coords{Lat: 47.3697, Lng: 8.5387},
 		Free:    10,
@@ -68,6 +68,14 @@ var fixtureLots = []parkingLot{
 		Address: "Bürkliplatz 1, Zurich",
 		Coords:  coords{Lat: 47.3661, Lng: 8.5420},
 		Free:    0,
+		Total:   50,
+		State:   "open",
+	},
+	{
+		Name:    "Test Lot Normal",
+		Address: "Paradeplatz 4, Zurich",
+		Coords:  coords{Lat: 47.3697, Lng: 8.5397},
+		Free:    40,
 		Total:   50,
 		State:   "open",
 	},
@@ -84,6 +92,12 @@ func correctedFree(lot parkingLot) int {
 func markFull(lot *parkingLot) {
 	if lot.Free == 0 {
 		lot.State = "full"
+	}
+}
+
+func markBusy(lot *parkingLot) {
+	if lot.Free < lot.Total/3 {
+		lot.State = "busy"
 	}
 }
 
@@ -140,10 +154,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	for i, lot := range filteredLots {
 		filteredLots[i].Free = correctedFree(lot)
-	}
-
-	for i, lot := range filteredLots {
-		filteredLots[i].Free = correctedFree(lot)
+		markBusy(&filteredLots[i])
 		markFull(&filteredLots[i])
 	}
 
