@@ -36,4 +36,4 @@ Example: `http://localhost:3000/?latitude=47.3769&longitude=8.5417&radius=500`
 
 ## Deployment
 
-Deployed on [deplo.io](https://deploi.io). Builds trigger automatically on push to `main`.
+Deployed via Deplo.io by Nine at [parking-spot-checker.7b22534.deploio.app](https://parking-spot-checker.7b22534.deploio.app/). Builds trigger automatically on push to `main`.
