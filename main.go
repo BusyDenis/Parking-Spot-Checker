@@ -17,6 +17,8 @@ var funcMap = template.FuncMap{
 	},
 }
 
+const API_URL = "https://api.parkendd.de/Zuerich"
+
 var templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("*.html"))
 
 type parkingLot struct {
@@ -88,47 +90,55 @@ func correctedFree(lot parkingLot) int {
 	return lot.Free
 }
 
-func markFull(lot *parkingLot) {
+func markFull(lot parkingLot) parkingLot {
 	if lot.Free == 0 {
 		lot.State = "full"
 	}
+	return lot
 }
 
-func markBusy(lot *parkingLot) {
+func markBusy(lot parkingLot) parkingLot {
 	if lot.Free < lot.Total/3 {
 		lot.State = "busy"
 	}
+	return lot
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-
-	radius := r.URL.Query().Get("radius")
+func httpHandler(r *http.Request) (radius, latitude, longitude string) {
+	radius = r.URL.Query().Get("radius")
 	if radius == "" {
 		radius = "750"
 	}
 
-	latitude := r.URL.Query().Get("latitude")
-	longitude := r.URL.Query().Get("longitude")
+	latitude = r.URL.Query().Get("latitude")
+	longitude = r.URL.Query().Get("longitude")
+	return
+}
 
-	resp, err := http.Get("https://api.parkendd.de/Zuerich")
-
+func fetchParkingData() (parkingResponse, error) {
+	var data parkingResponse
+	resp, err := http.Get(API_URL)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Failed to fetch data", http.StatusInternalServerError)
-		return
+		return data, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		http.Error(w, "Failed to fetch data", http.StatusBadGateway)
-		return
+		return data, http.ErrHandlerTimeout
 	}
 
-	var data parkingResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data, err
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+
+	radius, latitude, longitude := httpHandler(r)
+
+	data, err := fetchParkingData()
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Parse error", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch data", http.StatusBadGateway)
 		return
 	}
 
@@ -153,8 +163,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	for i, lot := range filteredLots {
 		filteredLots[i].Free = correctedFree(lot)
-		markBusy(&filteredLots[i])
-		markFull(&filteredLots[i])
+		filteredLots[i] = markBusy(filteredLots[i])
+		filteredLots[i] = markFull(filteredLots[i])
 	}
 
 	page := pageData{

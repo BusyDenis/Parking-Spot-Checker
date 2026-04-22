@@ -1,0 +1,495 @@
+{
+    "last_downloaded": "2026-04-22T09:05:10",
+    "last_updated": "2026-04-22T08:56:20",
+    "lots": [
+        {
+            "address": "Otto-Sch\u00fctz-Weg",
+            "coords": {
+                "lat": 47.414848,
+                "lng": 8.540748
+            },
+            "forecast": false,
+            "free": 179,
+            "id": "zuerichparkhausaccu",
+            "lot_type": "Parkhaus",
+            "name": "Accu",
+            "state": "open",
+            "total": 194
+        },
+        {
+            "address": "Badenerstrasse 380",
+            "coords": {
+                "lat": 47.379458,
+                "lng": 8.509675
+            },
+            "forecast": false,
+            "free": 19,
+            "id": "zuerichparkhausalbisriederplatz",
+            "lot_type": "Parkhaus",
+            "name": "Albisriederplatz",
+            "state": "open",
+            "total": 66
+        },
+        {
+            "address": "Beethovenstrasse 35",
+            "coords": {
+                "lat": 47.367417,
+                "lng": 8.535761
+            },
+            "forecast": false,
+            "free": 20,
+            "id": "zuerichparkhausbleicherweg",
+            "lot_type": "Parkhaus",
+            "name": "Bleicherweg",
+            "state": "open",
+            "total": 275
+        },
+        {
+            "address": "Sophie-T\u00e4uber-Strasse 4",
+            "coords": {
+                "lat": 47.412805,
+                "lng": 8.540263
+            },
+            "forecast": false,
+            "free": 226,
+            "id": "zuerichparkhauscentereleven",
+            "lot_type": "Parkhaus",
+            "name": "Center Eleven",
+            "state": "open",
+            "total": 342
+        },
+        {
+            "address": "Gessnerallee 14",
+            "coords": {
+                "lat": 47.374211,
+                "lng": 8.533806
+            },
+            "forecast": false,
+            "free": 173,
+            "id": "zuerichparkhauscityparking",
+            "lot_type": "Parkhaus",
+            "name": "City Parking",
+            "state": "open",
+            "total": 620
+        },
+        {
+            "address": "Affolternstrasse 56",
+            "coords": {
+                "lat": 47.410876,
+                "lng": 8.540662
+            },
+            "forecast": false,
+            "free": 75,
+            "id": "zuerichparkhauscityport",
+            "lot_type": "Parkhaus",
+            "name": "Cityport",
+            "state": "open",
+            "total": 153
+        },
+        {
+            "address": "Badenerstrasse 420",
+            "coords": null,
+            "forecast": false,
+            "free": 63,
+            "id": "zuerichparkhauscrowneplaza",
+            "lot_type": "Parkhaus",
+            "name": "Crowne Plaza",
+            "state": "open",
+            "total": 520
+        },
+        {
+            "address": "Schwamendingenstrasse 31",
+            "coords": {
+                "lat": 47.407194,
+                "lng": 8.550214
+            },
+            "forecast": false,
+            "free": 27,
+            "id": "zuerichparkhausdorflinde",
+            "lot_type": "Parkhaus",
+            "name": "Dorflinde",
+            "state": "open",
+            "total": 98
+        },
+        {
+            "address": "Riesbachstrasse 7",
+            "coords": {
+                "lat": 47.360644,
+                "lng": 8.55344
+            },
+            "forecast": false,
+            "free": 63,
+            "id": "zuerichparkhausfeldegg",
+            "lot_type": "Parkhaus",
+            "name": "Feldegg",
+            "state": "open",
+            "total": 346
+        },
+        {
+            "address": "L\u00f6wenstrasse 50",
+            "coords": {
+                "lat": 47.375773,
+                "lng": 8.537618
+            },
+            "forecast": false,
+            "free": 32,
+            "id": "zuerichparkhausglobus",
+            "lot_type": "Parkhaus",
+            "name": "Globus",
+            "state": "open",
+            "total": 178
+        },
+        {
+            "address": "Bullingerstrasse 73",
+            "coords": {
+                "lat": 47.380354,
+                "lng": 8.510323
+            },
+            "forecast": false,
+            "free": 0,
+            "id": "zuerichparkhaushardauii",
+            "lot_type": "Parkhaus",
+            "name": "Hardau II",
+            "state": "open",
+            "total": 982
+        },
+        {
+            "address": "Sihlquai 41",
+            "coords": {
+                "lat": 47.381218,
+                "lng": 8.537886
+            },
+            "forecast": false,
+            "free": 75,
+            "id": "zuerichparkhaushauptbahnhof",
+            "lot_type": "Parkhaus",
+            "name": "Hauptbahnhof",
+            "state": "open",
+            "total": 176
+        },
+        {
+            "address": "Molkenstrasse 5/9",
+            "coords": null,
+            "forecast": false,
+            "free": 34,
+            "id": "zuerichparkhaushelvetiaplatz",
+            "lot_type": "Parkhaus",
+            "name": "Helvetiaplatz",
+            "state": "open",
+            "total": 0
+        },
+        {
+            "address": "R\u00e4mistrasse 22a",
+            "coords": {
+                "lat": 47.368666,
+                "lng": 8.547632
+            },
+            "forecast": false,
+            "free": 253,
+            "id": "zuerichparkhaushohepromenade",
+            "lot_type": "Parkhaus",
+            "name": "Hohe Promenade",
+            "state": "open",
+            "total": 556
+        },
+        {
+            "address": "Steinm\u00fchleplatz 1",
+            "coords": {
+                "lat": 47.373847,
+                "lng": 8.536227
+            },
+            "forecast": false,
+            "free": 106,
+            "id": "zuerichparkhausjelmoli",
+            "lot_type": "Parkhaus",
+            "name": "Jelmoli",
+            "state": "open",
+            "total": 222
+        },
+        {
+            "address": "Jungholzstrasse 19",
+            "coords": {
+                "lat": 47.413423,
+                "lng": 8.543973
+            },
+            "forecast": false,
+            "free": 127,
+            "id": "zuerichparkhausjungholz",
+            "lot_type": "Parkhaus",
+            "name": "Jungholz",
+            "state": "open",
+            "total": 124
+        },
+        {
+            "address": "Armin-Bollinger-Weg",
+            "coords": {
+                "lat": 47.414062,
+                "lng": 8.539274
+            },
+            "forecast": false,
+            "free": 75,
+            "id": "zuerichparkhausmaxbillplatz",
+            "lot_type": "Parkhaus",
+            "name": "Max-Bill-Platz",
+            "state": "open",
+            "total": 59
+        },
+        {
+            "address": "Andreasstrasse 65",
+            "coords": {
+                "lat": 47.413568,
+                "lng": 8.553929
+            },
+            "forecast": false,
+            "free": 999,
+            "id": "zuerichparkhausmessezuerichag",
+            "lot_type": "Parkhaus",
+            "name": "Messe Z\u00fcrich AG",
+            "state": "open",
+            "total": 2000
+        },
+        {
+            "address": "Siewerdtstrasse 8",
+            "coords": {
+                "lat": 47.411839,
+                "lng": 8.547353
+            },
+            "forecast": false,
+            "free": 0,
+            "id": "zuerichparkhausnordhaus",
+            "lot_type": "Parkhaus",
+            "name": "Nordhaus",
+            "state": "open",
+            "total": 175
+        },
+        {
+            "address": "Brown-Boveri-Strasse 2",
+            "coords": {
+                "lat": 47.413199,
+                "lng": 8.536066
+            },
+            "forecast": false,
+            "free": 76,
+            "id": "zuerichparkhausoctavo",
+            "lot_type": "Parkhaus",
+            "name": "Octavo",
+            "state": "open",
+            "total": 123
+        },
+        {
+            "address": "Schillerstrasse 5",
+            "coords": null,
+            "forecast": false,
+            "free": 133,
+            "id": "zuerichparkhausop\u00e9ra",
+            "lot_type": "Parkhaus",
+            "name": "Op\u00e9ra",
+            "state": "open",
+            "total": 299
+        },
+        {
+            "address": "F\u00f6rrlibuckstrasse 151",
+            "coords": {
+                "lat": 47.391929,
+                "lng": 8.511443
+            },
+            "forecast": false,
+            "free": 399,
+            "id": "zuerichparkhauspwest",
+            "lot_type": "Parkhaus",
+            "name": "P West",
+            "state": "open",
+            "total": 1000
+        },
+        {
+            "address": "Beethovenstrasse 21",
+            "coords": {
+                "lat": 47.36586,
+                "lng": 8.536077
+            },
+            "forecast": false,
+            "free": 112,
+            "id": "zuerichparkhausparkhyatt",
+            "lot_type": "Parkhaus",
+            "name": "Park Hyatt",
+            "state": "open",
+            "total": 267
+        },
+        {
+            "address": "Sophie-T\u00e4uber-Strasse 10",
+            "coords": {
+                "lat": 47.412654,
+                "lng": 8.539574
+            },
+            "forecast": false,
+            "free": 0,
+            "id": "zuerichparkhausparkside",
+            "lot_type": "Parkhaus",
+            "name": "Parkside",
+            "state": "open",
+            "total": 38
+        },
+        {
+            "address": "Pfingstweidstrasse 1",
+            "coords": {
+                "lat": 47.38715,
+                "lng": 8.51633
+            },
+            "forecast": false,
+            "free": 98,
+            "id": "zuerichparkhauspfingstweid",
+            "lot_type": "Parkhaus",
+            "name": "Pfingstweid",
+            "state": "open",
+            "total": 276
+        },
+        {
+            "address": "Niklausstrasse 1",
+            "coords": {
+                "lat": 47.38699,
+                "lng": 8.539633
+            },
+            "forecast": false,
+            "free": 176,
+            "id": "zuerichparkhausstampfenbach",
+            "lot_type": "Parkhaus",
+            "name": "Stampfenbach",
+            "state": "open",
+            "total": 237
+        },
+        {
+            "address": "N\u00fcschelerstrasse 31",
+            "coords": {
+                "lat": 47.372177,
+                "lng": 8.535883
+            },
+            "forecast": false,
+            "free": 1,
+            "id": "zuerichparkhaustalgarten",
+            "lot_type": "Parkhaus",
+            "name": "Talgarten",
+            "state": "open",
+            "total": 110
+        },
+        {
+            "address": "Frauenklinikstrasse",
+            "coords": {
+                "lat": 47.37878088,
+                "lng": 8.54970217
+            },
+            "forecast": false,
+            "free": 1,
+            "id": "zuerichparkhaususznord",
+            "lot_type": "Parkhaus",
+            "name": "USZ Nord",
+            "state": "open",
+            "total": 90
+        },
+        {
+            "address": "Winterthurerstrasse 181",
+            "coords": {
+                "lat": 47.397478,
+                "lng": 8.547235
+            },
+            "forecast": false,
+            "free": 326,
+            "id": "zuerichparkhausuniirchel",
+            "lot_type": "Parkhaus",
+            "name": "Uni Irchel",
+            "state": "open",
+            "total": 1227
+        },
+        {
+            "address": "Uraniastrasse 3",
+            "coords": {
+                "lat": 47.374112,
+                "lng": 8.540615
+            },
+            "forecast": false,
+            "free": 0,
+            "id": "zuerichparkhausurania",
+            "lot_type": "Parkhaus",
+            "name": "Urania",
+            "state": "nodata",
+            "total": 607
+        },
+        {
+            "address": "F\u00e4rberstrasse 6",
+            "coords": {
+                "lat": 47.361727,
+                "lng": 8.547986
+            },
+            "forecast": false,
+            "free": 16,
+            "id": "zuerichparkhausutoquai",
+            "lot_type": "Parkhaus",
+            "name": "Utoquai",
+            "state": "open",
+            "total": 175
+        },
+        {
+            "address": "Nansenstrasse 5/7",
+            "coords": {
+                "lat": 47.4105,
+                "lng": 8.545035
+            },
+            "forecast": false,
+            "free": 62,
+            "id": "zuerichparkhauszueri11shopping",
+            "lot_type": "Parkhaus",
+            "name": "Z\u00fcri 11 Shopping",
+            "state": "open",
+            "total": 60
+        },
+        {
+            "address": "Dufourstrasse 142",
+            "coords": {
+                "lat": 47.356073,
+                "lng": 8.553629
+            },
+            "forecast": false,
+            "free": 1,
+            "id": "zuerichparkhauszuerichhorn",
+            "lot_type": "Parkhaus",
+            "name": "Z\u00fcrichhorn",
+            "state": "open",
+            "total": 245
+        },
+        {
+            "address": "D\u00f6rfli-/Thurgauerstrasse",
+            "coords": null,
+            "forecast": false,
+            "free": 134,
+            "id": "zuerichparkplatztheater11",
+            "lot_type": "Parkplatz",
+            "name": "Theater 11",
+            "state": "open",
+            "total": 188
+        },
+        {
+            "address": "Gloriastrasse",
+            "coords": {
+                "lat": 47.37479042,
+                "lng": 8.55141073
+            },
+            "forecast": false,
+            "free": 0,
+            "id": "zuerichparkplatzuszsued",
+            "lot_type": "Parkplatz",
+            "name": "USZ S\u00fcd",
+            "state": "open",
+            "total": 80
+        },
+        {
+            "address": "Giessereistrasse 18",
+            "coords": null,
+            "forecast": false,
+            "free": 20,
+            "id": "zuerichpuls5parkgarage",
+            "lot_type": "",
+            "name": "Puls 5 Parkgarage",
+            "state": "open",
+            "total": 0
+        }
+    ]
+}

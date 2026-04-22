@@ -1,397 +1,514 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parking App</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <style>
-        :root {
-            --bg: #f5f7fb;
-            --panel: #ffffff;
-            --panel-soft: #eef3ff;
-            --text: #172033;
-            --muted: #667085;
-            --line: #d8e0ee;
-            --primary: #1d4ed8;
-            --primary-dark: #153eaf;
-            --success: #0f9d58;
-            --shadow: 0 18px 45px rgba(23, 32, 51, 0.08);
-            --radius: 18px;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Züri Parking</title>
 
-        * {
-            box-sizing: border-box;
-        }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28%),
-                linear-gradient(180deg, #f8fbff 0%, #eef2f8 100%);
-        }
+  <style>
+    :root {
+      --bg:        oklch(0.98 0.005 80);
+      --bg-2:      oklch(0.96 0.006 80);
+      --ink:       oklch(0.18 0.02 260);
+      --ink-2:     oklch(0.38 0.015 260);
+      --ink-3:     oklch(0.62 0.012 260);
+      --line:      oklch(0.88 0.008 260);
+      --line-2:    oklch(0.92 0.006 260);
+      --signal:    oklch(0.68 0.2 50);
+      --signal-ink:oklch(0.42 0.18 45);
+      --open:      oklch(0.62 0.16 148);
+      --busy:      oklch(0.74 0.17 80);
+      --full:      oklch(0.58 0.22 25);
+      --paper:     #fbfaf6;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    body { min-height: 100vh; }
+    a { color: inherit; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-feature-settings: 'ss01','cv01'; }
+    .num  { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+    button { font-family: inherit; cursor: pointer; }
+    input, select { font-family: inherit; }
+    ::selection { background: var(--signal); color: var(--paper); }
 
-        .page {
-            width: min(960px, calc(100% - 32px));
-            margin: 32px auto;
-        }
+    /* ---------- Header ---------- */
+    .hdr { border-bottom: 1px solid var(--line); background: var(--bg); }
+    .hdr-inner { max-width: 1320px; margin: 0 auto; padding: 36px 32px 28px; display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+    .brand { display: flex; gap: 18px; align-items: center; }
+    .eyebrow { font-size: 11px; letter-spacing: 0.2em; color: var(--ink-3); text-transform: uppercase; margin-bottom: 8px; }
+    .title { margin: 0; font-size: clamp(32px, 5vw, 56px); line-height: 0.98; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
+    .title em { font-style: italic; font-weight: 500; color: var(--signal-ink); }
+    .stats { display: flex; gap: 36px; align-items: flex-end; flex-wrap: wrap; }
+    .stat { display: flex; flex-direction: column; gap: 2px; min-width: 110px; }
+    .stat-k { font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-3); text-transform: uppercase; }
+    .stat-v { font-size: 28px; font-weight: 600; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .stat-v.accent { color: var(--signal-ink); }
 
-        .hero {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 28px;
-            padding: 28px;
-            box-shadow: var(--shadow);
-            margin-bottom: 20px;
-        }
+    /* ---------- Ticker ---------- */
+    .ticker { display: flex; align-items: stretch; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper); }
+    .ticker-label { padding: 8px 14px; font-size: 11px; letter-spacing: 0.18em; background: var(--ink); color: var(--paper); display: flex; align-items: center; flex-shrink: 0; }
+    .ticker-track { flex: 1; overflow: hidden; position: relative; }
+    .ticker-run { display: inline-flex; white-space: nowrap; padding: 8px 0; animation: ticker 60s linear infinite; font-size: 12px; }
+    .ticker-item { display: inline-flex; align-items: center; }
+    .ticker-sep { margin: 0 22px; color: var(--line); }
+    @keyframes ticker { 0% { transform: translateX(0) } 100% { transform: translateX(-33.333%) } }
 
-        .hero h1 {
-            margin: 0 0 10px;
-            font-size: clamp(30px, 5vw, 48px);
-        }
+    /* ---------- Radius ---------- */
+    .radius { padding: 40px 32px 32px; border-bottom: 1px solid var(--line); background: var(--bg); }
+    .radius-row { max-width: 1320px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+    .radius-reading { display: flex; align-items: flex-end; }
+    .radius-reading .num { font-size: clamp(56px, 10vw, 96px); font-weight: 600; letter-spacing: -0.04em; line-height: 0.9; }
+    .radius-meta { font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+    .radius-meta strong { color: var(--signal-ink); font-weight: 600; }
+    .preset-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .preset { padding: 10px 14px; border: 1px solid var(--line); background: transparent; color: var(--ink-2); font-size: 12px; letter-spacing: 0.04em; border-radius: 0; transition: all .15s; }
+    .preset:hover { border-color: var(--ink-2); color: var(--ink); }
+    .preset.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .slider-wrap { max-width: 1320px; margin: 28px auto 0; position: relative; }
+    .slider-wrap input[type=range] { position: absolute; inset: 0; width: 100%; height: 40px; opacity: 0; cursor: pointer; z-index: 3; margin: 0; }
+    .slider-track { position: relative; height: 3px; background: var(--line); pointer-events: none; }
+    .slider-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--signal); transition: width .1s linear; }
+    .slider-scale { display: flex; justify-content: space-between; margin-top: 10px; font-size: 11px; color: var(--ink-3); }
 
-        .hero p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.6;
-        }
+    .loc-row { max-width: 1320px; margin: 24px auto 0; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .loc-btn { padding: 10px 16px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 12px; letter-spacing: 0.06em; }
+    .loc-btn.primary { background: var(--ink); color: var(--paper); }
+    .loc-msg { font-size: 12px; color: var(--ink-2); }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 20px;
-        }
+    /* ---------- Leaderboard ---------- */
+    .board { max-width: 1320px; margin: 0 auto; padding: 40px 32px 48px; }
+    .board-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; }
+    .board-title { margin: 0; font-size: clamp(28px, 4vw, 40px); font-weight: 700; letter-spacing: -0.02em; }
+    .board-meta { font-size: 12px; color: var(--ink-2); }
+    .board-meta .muted { color: var(--ink-3); }
+    .board-list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--ink); }
+    .board-empty { padding: 40px 16px; text-align: center; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+    .row { display: grid; grid-template-columns: 56px 1.6fr 1.3fr 0.9fr 0.7fr 0.9fr; gap: 20px; align-items: center; padding: 18px 16px; border-bottom: 1px solid var(--line); transition: background .15s; }
+    .row:hover { background: var(--bg-2); }
+    .row-rank { font-size: 18px; color: var(--ink-3); font-weight: 500; }
+    .row-name-title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; }
+    .row-name-addr { font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+    .row-gauge { display: flex; align-items: center; gap: 10px; }
+    .gauge-track { flex: 1; height: 8px; background: var(--line-2); position: relative; overflow: hidden; }
+    .gauge-fill { height: 100%; transition: width .3s cubic-bezier(.3,.7,.3,1); }
+    .gauge-pct { font-size: 11px; color: var(--ink-2); min-width: 32px; text-align: right; }
+    .row-free { display: flex; align-items: baseline; gap: 4px; justify-content: flex-end; }
+    .row-free-n { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+    .row-free-of { font-size: 12px; color: var(--ink-3); }
+    .row-dist { font-size: 12px; color: var(--ink-2); text-align: right; line-height: 1.3; }
+    .row-dist .muted { color: var(--ink-3); font-size: 10.5px; }
+    .row-status { font-size: 10.5px; letter-spacing: 0.12em; border: 1px solid; padding: 4px 8px; display: inline-flex; align-items: center; gap: 6px; justify-self: start; }
+    .row-status .dot { width: 6px; height: 6px; border-radius: 50%; }
 
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-        }
+    @media (max-width: 900px) {
+      .row { grid-template-columns: 40px 1fr auto; row-gap: 12px; }
+      .row-gauge, .row-dist, .row-status { grid-column: 2 / -1; }
+      .row-free { grid-column: 3; grid-row: 1; }
+    }
 
-        .card h2 {
-            margin: 0 0 14px;
-            font-size: 20px;
-        }
+    /* ---------- Map ---------- */
+    .map-section { max-width: 1320px; margin: 0 auto; padding: 0 32px 64px; }
+    .map-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
+    .map-title { margin: 0; font-size: clamp(28px, 4vw, 40px); font-weight: 700; letter-spacing: -0.02em; }
+    .map-coords { font-size: 11px; color: var(--ink-3); text-align: right; letter-spacing: 0.08em; line-height: 1.5; }
+    .map-canvas { position: relative; height: min(70vh, 620px); background: var(--paper); border: 1px solid var(--ink); overflow: hidden; }
+    .map-canvas .leaflet-container { background: var(--paper); }
+    .map-legend { position: absolute; right: 16px; top: 16px; display: flex; gap: 14px; background: var(--paper); padding: 8px 12px; border: 1px solid var(--line); z-index: 500; }
+    .legend-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; letter-spacing: 0.1em; color: var(--ink-2); }
+    .legend-dot span.c { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
-        .field-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: #fff;
-            font: inherit;
-        }
-
-        form {
-            display: grid;
-            gap: 14px;
-        }
-
-        .button-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        button {
-            border: 0;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font: inherit;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        button[type="submit"],
-        #locate-btn {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        #refresh-btn {
-            background: var(--panel-soft);
-            color: var(--text);
-            border: 1px solid var(--line);
-        }
-
-        .meta {
-            display: grid;
-            gap: 8px;
-            margin-top: 16px;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: 8px 12px;
-            background: var(--panel-soft);
-            color: var(--primary-dark);
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .helper {
-            margin: 0 0 18px;
-            color: var(--muted);
-            line-height: 1.6;
-        }
-
-        .parking-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: grid;
-            gap: 12px;
-        }
-
-        .parking-list li {
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 14px 16px;
-            background: #fff;
-        }
-
-        .lot-name {
-            margin: 0 0 6px;
-            font-size: 17px;
-            font-weight: 700;
-        }
-
-        .lot-meta {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.5;
-        }
-
-        .status-open {
-            color: var(--success);
-            font-weight: 700;
-        }
-
-        .status-closed {
-            color: #b42318;
-            font-weight: 700;
-        }
-
-        .status-busy {
-            color: #d97706;
-            font-weight: 700;
-        }
-
-        .status-full {
-            color: #b42318;
-            font-weight: 700;
-        }
-
-        @media (max-width: 820px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .page {
-                width: min(100% - 20px, 960px);
-                margin: 16px auto;
-            }
-
-            .hero,
-            .card {
-                padding: 18px;
-            }
-
-            .results-header {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-        }
-    </style>
+    /* ---------- Footer ---------- */
+    .ftr { border-top: 1px solid var(--ink); background: var(--ink); color: var(--paper); }
+    .ftr-inner { max-width: 1320px; margin: 0 auto; padding: 40px 32px 32px; display: grid; grid-template-columns: auto 1fr; column-gap: 40px; row-gap: 18px; align-items: start; }
+    .ftr-col-title { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.7 0.01 260); }
+    .ftr-col-body { font-size: 14px; line-height: 1.5; max-width: 620px; }
+    .ftr-rule { border-top: 1px solid oklch(0.3 0.02 260); overflow: hidden; }
+    .ftr-mega { padding: 28px 0; font-size: clamp(40px, 10vw, 120px); font-weight: 700; letter-spacing: -0.03em; text-align: center; white-space: nowrap; color: oklch(0.3 0.02 260); }
+  </style>
 </head>
 
 <body>
-    <main class="page">
-        <section class="hero">
-            <h1>Parking App</h1>
-            <p>Find parking spots near your current location and filter them by walking radius.</p>
-        </section>
+  <!-- ===== Header ===== -->
+  <header class="hdr">
+    <div class="hdr-inner">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden>
+          <rect x="1" y="1" width="38" height="38" rx="4" fill="var(--ink)"/>
+          <text x="20" y="28" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="24" fill="var(--paper)">P</text>
+        </svg>
+        <div>
+          <div class="eyebrow mono">Züri · Parkhaus Index</div>
+          <h1 class="title">Where can I park, <em>right now?</em></h1>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-k mono">Parkhäuser</div>
+          <div class="stat-v num" id="stat-total">{{len .Lots}}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-k mono">Freie Plätze</div>
+          <div class="stat-v num accent" id="stat-free">–</div>
+        </div>
+        <div class="stat">
+          <div class="stat-k mono">Lokalzeit</div>
+          <div class="stat-v num" id="stat-time">–</div>
+        </div>
+      </div>
+    </div>
+  </header>
 
-        <section class="grid">
-            <aside class="card">
-                <h2>Search</h2>
+  <!-- ===== Ticker ===== -->
+  <div class="ticker" aria-label="Live parking events">
+    <div class="ticker-label mono">LIVE · ZH</div>
+    <div class="ticker-track">
+      <div class="ticker-run mono" id="ticker-run"></div>
+    </div>
+  </div>
 
-                <div class="field-group">
-                    <label for="location-input">Location</label>
-                    <input id="location-input" type="text" placeholder="Enter location">
-                </div>
+  <!-- ===== Radius control ===== -->
+  <section class="radius">
+    <form id="radius-form" action="/" method="GET">
+      <div class="radius-row">
+        <div>
+          <div class="eyebrow mono">01 · Walking radius</div>
+          <div class="radius-reading">
+            <span class="num" id="radius-read">{{.Radius}}</span>
+            <span class="mono" style="font-size:18px; color:var(--ink-3); margin-left:6px;">m</span>
+          </div>
+          <div class="radius-meta mono">
+            ≈ <span id="radius-walk">–</span> min walk ·
+            <strong><span id="radius-count">–</span> garages</strong> in range
+          </div>
+        </div>
+        <div class="preset-row" id="presets">
+          <button type="button" class="preset mono" data-r="250">250</button>
+          <button type="button" class="preset mono" data-r="500">500</button>
+          <button type="button" class="preset mono" data-r="750">750</button>
+          <button type="button" class="preset mono" data-r="1000">1000</button>
+          <button type="button" class="preset mono" data-r="1500">1500</button>
+          <button type="button" class="preset mono" data-r="3000">3000</button>
+        </div>
+      </div>
 
-                <form action="/" method="GET">
-                    <label for="radius-select">Radius</label>
-                    <select id="radius-select" name="radius">
-                        <option value="50" {{if eq .Radius "50" }}selected{{end}}>50 m</option>
-                        <option value="300" {{if eq .Radius "300" }}selected{{end}}>300 m</option>
-                        <option value="750" {{if eq .Radius "750" }}selected{{end}}>750 m</option>
-                        <option value="1500" {{if eq .Radius "1500" }}selected{{end}}>1.5 km</option>
-                        <option value="3000" {{if eq .Radius "3000" }}selected{{end}}>3 km</option>
-                        <option value="10000" {{if eq .Radius "10000" }}selected{{end}}>10 km</option>
-                    </select>
-                    <input id="latitude-input" name="latitude" type="hidden">
-                    <input id="longitude-input" name="longitude" type="hidden">
-                    <button type="submit">Filter Results</button>
-                </form>
+      <div class="slider-wrap">
+        <input id="radius-range" type="range" min="100" max="3000" step="10" value="{{.Radius}}" aria-label="Radius in meters">
+        <div class="slider-track"><div class="slider-fill" id="slider-fill"></div></div>
+        <div class="slider-scale mono">
+          <span>100m</span><span>750</span><span>1500</span><span>2250</span><span>3000m</span>
+        </div>
+      </div>
 
-                <div class="button-row">
-                    <button id="locate-btn" type="button">Use my location</button>
-                    <button id="refresh-btn" type="button">Refresh</button>
-                </div>
+      <div class="loc-row">
+        <button id="locate-btn" type="button" class="loc-btn primary mono">Use my location</button>
+        <button id="apply-btn" type="submit" class="loc-btn mono">Re-query server</button>
+        <span id="loc-msg" class="loc-msg mono">Using Paradeplatz as default origin. Click “Use my location” for real distances.</span>
+      </div>
 
-                <div class="meta">
-                    <p id="api-status">Ready</p>
-                    <p id="geo-message"></p>
-                    <p>Last update: <span id="last-update">-</span></p>
-                </div>
-            </aside>
+      <input id="radius-input" type="hidden" name="radius" value="{{.Radius}}">
+      <input id="latitude-input" type="hidden" name="latitude">
+      <input id="longitude-input" type="hidden" name="longitude">
+    </form>
+  </section>
 
-            <section class="card">
-                <div class="results-header">
-                    <div>
-                        <h2>Parking Spots in Your Area</h2>
-                        <p class="helper">Click "Use my location" first, then apply a radius filter.</p>
-                    </div>
-                    <span class="badge">Selected radius: {{.Radius}} m</span>
-                </div>
+  <!-- ===== Leaderboard ===== -->
+  <section class="board">
+    <div class="board-head">
+      <div>
+        <div class="eyebrow mono">02 · Parkhäuser sorted by availability</div>
+        <h2 class="board-title">Freest first.</h2>
+      </div>
+      <div class="board-meta mono">
+        <span id="board-shown">–</span> shown
+        <span class="muted"> · <span id="board-hidden">–</span> outside radius</span>
+      </div>
+    </div>
+    <ol class="board-list" id="board-list"></ol>
+  </section>
 
-                {{if .Lots}}
-                <ul class="parking-list">
-                    {{range .Lots}}
-                    <li>
-                        <p class="lot-name">{{.Name}}</p>
-                        <p class="lot-meta">Free: {{.Free}} / {{.Total}}</p>
-                        <p class="lot-meta">
-                            Status:
-                            <span class="status-{{.State}}">{{.State}}</span>
-                        </p>
-                        <p class="lot-meta">{{.Address}}</p>
-                    </li>
-                    {{end}}
-                </ul>
-                {{else}}
-                <p class="helper">No parking data found.</p>
-                {{end}}
-            </section>
-        </section>
+  <!-- ===== Map ===== -->
+  <section class="map-section">
+    <div class="map-head">
+      <div>
+        <div class="eyebrow mono">03 · Map view</div>
+        <h2 class="map-title">Live parkhaus map.</h2>
+      </div>
+      <div class="map-coords mono">
+        ZÜRICH · CH-8001<br>47.3686° N · 8.5392° E
+      </div>
+    </div>
+    <div class="map-canvas">
+      <div id="map" style="width:100%; height:100%;"></div>
+      <div class="map-legend">
+        <span class="legend-dot mono"><span class="c" style="background:var(--open)"></span>FREI</span>
+        <span class="legend-dot mono"><span class="c" style="background:var(--busy)"></span>WENIG</span>
+        <span class="legend-dot mono"><span class="c" style="background:var(--full)"></span>VOLL</span>
+      </div>
+    </div>
+  </section>
 
-        <section class="card" style="margin-top:20px;">
-            <h2>Map</h2>
-            <div id="map" style="width:100%; height:420px; border-radius:10px;"></div>
-        </section>
-    </main>
+  <!-- ===== Footer ===== -->
+  <footer class="ftr">
+    <div class="ftr-inner">
+      <div class="ftr-col-title mono">About</div>
+      <div class="ftr-col-body">Züri Parking Index aggregates live parkhaus data from the City of Zürich's open feeds via parkendd.de. Updated with every request.</div>
+      <div class="ftr-col-title mono">Sources</div>
+      <div class="ftr-col-body">api.parkendd.de/Zuerich · PLS Zürich · P+R Zürich</div>
+      <div class="ftr-col-title mono">Updated</div>
+      <div class="ftr-col-body mono" id="ftr-updated">{{.LastUpdated}}</div>
+    </div>
+    <div class="ftr-rule">
+      <div class="ftr-mega">PARK · ZH · PARK · ZH · PARK · ZH · PARK · ZH · PARK · ZH</div>
+    </div>
+  </footer>
 
-    <script>
-        const locateButton = document.getElementById("locate-btn");
-        const refreshButton = document.getElementById("refresh-btn");
-        const geoMessage = document.getElementById("geo-message");
-        const apiStatus = document.getElementById("api-status");
-        const lastUpdate = document.getElementById("last-update");
-        const latitudeInput = document.getElementById("latitude-input");
-        const longitudeInput = document.getElementById("longitude-input");
+  <script>
+    // Server-rendered data
+    const ALL_LOTS   = {{.Lots | json}};
+    const DEFAULT_ORIGIN = { lat: 47.3693, lng: 8.5383 }; // Paradeplatz
+    const statusLabel = { open: 'FREI', busy: 'WENIG', full: 'VOLL', closed: 'GESCHL' };
+    const statusVar   = { open: 'var(--open)', busy: 'var(--busy)', full: 'var(--full)', closed: 'var(--full)' };
 
-            var map = L.map('map').setView([47.3769, 8.5417], 14);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    const fmt = n => Number(n).toLocaleString('de-CH');
+    const pad = n => String(n).padStart(2, '0');
 
-        // [Claude] Ask the browser for the user's GPS position and re-center the map on it.
-        // getCurrentPosition is async — the map loads first, then jumps to the user once granted.
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                map.setView([position.coords.latitude, position.coords.longitude], 14);
-            });
+    // Haversine distance in meters
+    function distanceMeters(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const toRad = d => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function statusOf(lot) {
+      if (lot.state && statusLabel[lot.state]) return lot.state;
+      if (!lot.total) return 'open';
+      if (lot.free === 0) return 'full';
+      if (lot.free / lot.total < 0.2) return 'busy';
+      return 'open';
+    }
+
+    // ---- Initial state ----
+    let origin = { ...DEFAULT_ORIGIN };
+    let radius = parseInt("{{.Radius}}", 10) || 750;
+
+    // Attach distance to each lot
+    function recomputeDistances() {
+      ALL_LOTS.forEach(lot => {
+        if (lot.coords && lot.coords.lat && lot.coords.lng) {
+          lot.dist = Math.round(distanceMeters(origin.lat, origin.lng, lot.coords.lat, lot.coords.lng));
+        } else {
+          lot.dist = Infinity;
         }
+      });
+    }
 
-        // [Claude] The Go template injects the filtered parking lots as a JSON array here.
-        // This means the data comes from the server — no extra API call needed from the browser.
-        var lots = {{.Lots | json}};
+    // ---- DOM refs ----
+    const $ = id => document.getElementById(id);
+    const radiusRead   = $('radius-read');
+    const radiusWalk   = $('radius-walk');
+    const radiusCount  = $('radius-count');
+    const sliderFill   = $('slider-fill');
+    const radiusRange  = $('radius-range');
+    const radiusInput  = $('radius-input');
+    const boardList    = $('board-list');
+    const boardShown   = $('board-shown');
+    const boardHidden  = $('board-hidden');
+    const statFree     = $('stat-free');
+    const statTime     = $('stat-time');
+    const tickerRun    = $('ticker-run');
+    const locMsg       = $('loc-msg');
 
-        // [Claude] Loop over every lot and place a circle marker on the map.
-        // green = open, orange = busy, red = full/closed. Clicking a marker shows name, free spots and status.
-        var stateColors = { open: "green", busy: "orange", full: "red", closed: "red" };
-        lots.forEach(function(lot) {
-            // Skip lots with missing coordinates to avoid map errors
-            if (lot.coords && lot.coords.lat && lot.coords.lng) {
-                var color = stateColors[lot.state] || "gray";
-                var marker = L.circleMarker([lot.coords.lat, lot.coords.lng], {
-                    radius: 10,
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.7
-                }).addTo(map);
-                marker.bindPopup(
-                    "<b>" + lot.name + "</b><br>" +
-                    "Free: " + lot.free + " / " + lot.total + "<br>" +
-                    "Status: " + lot.state
-                );
-            }
+    // ---- Renderers ----
+    function renderTicker() {
+      const events = ALL_LOTS
+        .filter(l => l.total > 0)
+        .map(l => {
+          const s = statusOf(l);
+          const msg = s === 'full' ? `${l.name} — reached capacity`
+                    : s === 'busy' ? `${l.name} filling fast (${l.free}/${l.total})`
+                    : `${l.name} — ${l.free} spots free`;
+          return { kind: s, msg };
         });
-        
-        function setCurrentTime() {
-            const now = new Date();
-            lastUpdate.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        }
+      if (events.length === 0) return;
+      const one = events.map(e => `
+        <span class="ticker-item">
+          <span style="color:var(--ink-3)">●</span>
+          <span style="color:${statusVar[e.kind]}; margin-left:8px; font-weight:600">●</span>
+          <span style="margin-left:8px">${e.msg}</span>
+          <span class="ticker-sep">／</span>
+        </span>`).join('');
+      tickerRun.innerHTML = one + one + one;
+    }
 
-        locateButton.addEventListener("click", () => {
-            if (!navigator.geolocation) {
-                geoMessage.textContent = "Geolocation is not supported in this browser.";
-                return;
-            }
+    function renderRadius() {
+      radiusRead.textContent = radius;
+      radiusRange.value = radius;
+      radiusInput.value = radius;
+      radiusWalk.textContent = Math.max(1, Math.round(radius / 80));
+      const min = +radiusRange.min, max = +radiusRange.max;
+      const pct = ((radius - min) / (max - min)) * 100;
+      sliderFill.style.width = pct + '%';
+      document.querySelectorAll('#presets .preset').forEach(b => {
+        b.classList.toggle('on', +b.dataset.r === radius);
+      });
+    }
 
-            geoMessage.textContent = "Checking your location...";
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    latitudeInput.value = latitude;
-                    longitudeInput.value = longitude;
-                    geoMessage.textContent = "Location found: " + latitude.toFixed(4) + ", " + longitude.toFixed(4);
-                    apiStatus.textContent = "Location ready";
-                },
-                () => {
-                    geoMessage.textContent = "Location access was denied.";
-                }
-            );
-        });
+    function renderBoard() {
+      const visible = ALL_LOTS
+        .filter(l => l.dist <= radius)
+        .sort((a,b) => (b.free/Math.max(1,b.total)) - (a.free/Math.max(1,a.total)));
+      const hidden = ALL_LOTS.length - visible.length;
 
-        refreshButton.addEventListener("click", () => {
-            setCurrentTime();
-            apiStatus.textContent = "Refreshed";
-        });
+      radiusCount.textContent = visible.length;
+      boardShown.textContent  = visible.length;
+      boardHidden.textContent = hidden;
 
-        setCurrentTime();
-    </script>
+      if (visible.length === 0) {
+        boardList.innerHTML = `<li class="board-empty mono">No garages within ${radius}m — try a wider radius.</li>`;
+        return;
+      }
+
+      boardList.innerHTML = visible.map((p, i) => {
+        const s = statusOf(p);
+        const color = statusVar[s];
+        const occ = p.total ? Math.max(0, Math.min(1, 1 - p.free/p.total)) : 1;
+        const occPct = Math.round(occ * 100);
+        return `
+          <li class="row">
+            <div class="row-rank num">${pad(i+1)}</div>
+            <div>
+              <div class="row-name-title">${p.name || '—'}</div>
+              <div class="row-name-addr mono">${p.address || ''}</div>
+            </div>
+            <div class="row-gauge" aria-label="${occPct}% full">
+              <div class="gauge-track"><div class="gauge-fill" style="width:${occPct}%; background:${color}"></div></div>
+              <div class="gauge-pct mono">${occPct}%</div>
+            </div>
+            <div class="row-free">
+              <span class="row-free-n num">${p.free}</span>
+              <span class="row-free-of mono">/ ${p.total}</span>
+            </div>
+            <div class="row-dist mono">
+              ${isFinite(p.dist) ? p.dist + 'm' : '—'}<br>
+              <span class="muted">${isFinite(p.dist) ? Math.max(1, Math.round(p.dist/80)) + ' min' : ''}</span>
+            </div>
+            <div class="row-status mono" style="color:${color}; border-color:${color}">
+              <span class="dot" style="background:${color}"></span>${statusLabel[s]}
+            </div>
+          </li>`;
+      }).join('');
+    }
+
+    function renderStats() {
+      const free = ALL_LOTS.reduce((s, l) => s + (l.free || 0), 0);
+      statFree.textContent = fmt(free);
+    }
+
+    function tickClock() {
+      const d = new Date();
+      statTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // ---- Map ----
+    const map = L.map('map', { zoomControl: true }).setView([origin.lat, origin.lng], 14);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let originMarker = L.circleMarker([origin.lat, origin.lng], {
+      radius: 6, color: '#000', fillColor: '#000', fillOpacity: 1, weight: 2
+    }).addTo(map);
+    let radiusCircle = L.circle([origin.lat, origin.lng], {
+      radius: radius, color: 'oklch(0.68 0.2 50)', weight: 1.5, dashArray: '4 6',
+      fillColor: 'oklch(0.68 0.2 50)', fillOpacity: 0.08
+    }).addTo(map);
+
+    const lotMarkers = [];
+    ALL_LOTS.forEach(lot => {
+      if (!(lot.coords && lot.coords.lat && lot.coords.lng)) return;
+      const s = statusOf(lot);
+      const color = s === 'open' ? '#2e9b56' : s === 'busy' ? '#c79a2e' : '#c0392b';
+      const label = lot.free === 0 ? '×' : (lot.free > 99 ? '99+' : String(lot.free));
+      const icon = L.divIcon({
+        className: 'lot-pin',
+        html: `<div style="width:34px;height:34px;border-radius:50%;background:var(--paper);border:2px solid ${color};display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:${color}">${label}</div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
+      const m = L.marker([lot.coords.lat, lot.coords.lng], { icon })
+        .bindPopup(`<b>${lot.name}</b><br>${lot.address || ''}<br>Free: ${lot.free} / ${lot.total}<br>Status: ${statusLabel[s]}`)
+        .addTo(map);
+      lotMarkers.push({ marker: m, lot });
+    });
+
+    function updateMapForRadius() {
+      radiusCircle.setRadius(radius);
+      lotMarkers.forEach(({ marker, lot }) => {
+        const within = lot.dist <= radius;
+        marker.setOpacity(within ? 1 : 0.35);
+      });
+    }
+
+    function updateMapForOrigin() {
+      map.setView([origin.lat, origin.lng], map.getZoom());
+      originMarker.setLatLng([origin.lat, origin.lng]);
+      radiusCircle.setLatLng([origin.lat, origin.lng]);
+    }
+
+    // ---- Controls ----
+    function setRadius(r) {
+      radius = Math.max(100, Math.min(3000, Math.round(r / 10) * 10));
+      renderRadius();
+      renderBoard();
+      updateMapForRadius();
+    }
+
+    radiusRange.addEventListener('input', e => setRadius(+e.target.value));
+    document.querySelectorAll('#presets .preset').forEach(b => {
+      b.addEventListener('click', () => setRadius(+b.dataset.r));
+    });
+
+    $('locate-btn').addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        locMsg.textContent = 'Geolocation not supported in this browser.';
+        return;
+      }
+      locMsg.textContent = 'Locating…';
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          origin = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          $('latitude-input').value  = origin.lat;
+          $('longitude-input').value = origin.lng;
+          locMsg.textContent = `Origin: ${origin.lat.toFixed(4)}°, ${origin.lng.toFixed(4)}°`;
+          recomputeDistances();
+          renderBoard();
+          updateMapForOrigin();
+          updateMapForRadius();
+        },
+        () => { locMsg.textContent = 'Location access denied.'; }
+      );
+    });
+
+    // ---- Init ----
+    recomputeDistances();
+    renderTicker();
+    renderStats();
+    renderRadius();
+    renderBoard();
+    updateMapForRadius();
+    tickClock();
+    setInterval(tickClock, 30000);
+  </script>
 </body>
 
 </html>
