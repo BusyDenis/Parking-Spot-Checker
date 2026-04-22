@@ -46,35 +46,35 @@ type pageData struct {
 	Lots           []parkingLot `json:"lots"`
 }
 
-var fixtureLots = []parkingLot{
+var testLots = []parkingLot{
 	{
-		Name:    "Test Lot Overfreed",
-		Address: "Bahnhofstrasse 1, Zurich",
-		Coords:  coords{Lat: 47.3769, Lng: 8.5417},
+		Name:    "Test Lot Overflowed",
+		Address: "Bahnhofstrasse 1, Oberglatt",
+		Coords:  coords{Lat: 47.4643, Lng: 8.5232},
 		Free:    62,
 		Total:   60,
 		State:   "open",
 	},
 	{
 		Name:    "Test Lot Busy",
-		Address: "Paradeplatz 2, Zurich",
-		Coords:  coords{Lat: 47.3697, Lng: 8.5387},
+		Address: "Bahnhofstrasse 3, Oberglatt",
+		Coords:  coords{Lat: 47.4644, Lng: 8.5234},
 		Free:    10,
 		Total:   50,
 		State:   "open",
 	},
 	{
 		Name:    "Test Lot Full",
-		Address: "Bürkliplatz 1, Zurich",
-		Coords:  coords{Lat: 47.3661, Lng: 8.5420},
+		Address: "Bahnhofstrasse 5, Oberglatt",
+		Coords:  coords{Lat: 47.4645, Lng: 8.5232},
 		Free:    0,
 		Total:   50,
 		State:   "open",
 	},
 	{
 		Name:    "Test Lot Normal",
-		Address: "Paradeplatz 4, Zurich",
-		Coords:  coords{Lat: 47.3697, Lng: 8.5397},
+		Address: "Bahnhofstrasse 7, Oberglatt",
+		Coords:  coords{Lat: 47.4644, Lng: 8.5230},
 		Free:    40,
 		Total:   50,
 		State:   "open",
@@ -133,7 +133,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Lots = append(data.Lots, fixtureLots...)
+	data.Lots = append(data.Lots, testLots...)
 
 	filteredLots := data.Lots
 
