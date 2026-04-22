@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cp *)"
+      "Bash(cp *)",
+      "Bash(go build *)",
+      "Bash(go vet *)",
+      "Bash(git checkout *)"
     ]
   }
 }

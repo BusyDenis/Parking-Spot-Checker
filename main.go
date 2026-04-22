@@ -131,6 +131,26 @@ func fetchParkingData() (parkingResponse, error) {
 	return data, err
 }
 
+func filterLots(lots []parkingLot, radius, latitude, longitude string) []parkingLot {
+	radiusValue, radiusErr := strconv.ParseFloat(radius, 64)
+	latitudeValue, latitudeErr := strconv.ParseFloat(latitude, 64)
+	longitudeValue, longitudeErr := strconv.ParseFloat(longitude, 64)
+
+	if radiusErr != nil || latitudeErr != nil || longitudeErr != nil {
+		return lots
+	}
+
+	filteredLots := make([]parkingLot, 0, len(lots))
+	for _, lot := range lots {
+		distance := distanceInMeters(latitudeValue, longitudeValue, lot.Coords.Lat, lot.Coords.Lng)
+		if distance <= radiusValue {
+			filteredLots = append(filteredLots, lot)
+		}
+	}
+
+	return filteredLots
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	radius, latitude, longitude := httpHandler(r)
@@ -144,22 +164,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	data.Lots = append(data.Lots, testLots...)
 
-	filteredLots := data.Lots
-
-	radiusValue, radiusErr := strconv.ParseFloat(radius, 64)
-	latitudeValue, latitudeErr := strconv.ParseFloat(latitude, 64)
-	longitudeValue, longitudeErr := strconv.ParseFloat(longitude, 64)
-
-	if radiusErr == nil && latitudeErr == nil && longitudeErr == nil {
-		filteredLots = nil
-
-		for _, lot := range data.Lots {
-			distance := distanceInMeters(latitudeValue, longitudeValue, lot.Coords.Lat, lot.Coords.Lng)
-			if distance <= radiusValue {
-				filteredLots = append(filteredLots, lot)
-			}
-		}
-	}
+	filteredLots := filterLots(data.Lots, radius, latitude, longitude)
 
 	for i, lot := range filteredLots {
 		filteredLots[i].Free = correctedFree(lot)

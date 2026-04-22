@@ -351,15 +351,16 @@
     }
 
     function renderRadius() {
-      radiusRead.textContent = radius;
-      radiusRange.value = radius;
-      radiusInput.value = radius;
-      radiusWalk.textContent = Math.max(1, Math.round(radius / 80));
+      const inf = !isFinite(radius);
+      radiusRead.textContent = inf ? '∞' : radius;
+      radiusRange.value = inf ? radiusRange.max : radius;
+      radiusInput.value = inf ? '' : radius;
+      radiusWalk.textContent = inf ? '∞' : Math.max(1, Math.round(radius / 80));
       const min = +radiusRange.min, max = +radiusRange.max;
-      const pct = ((radius - min) / (max - min)) * 100;
+      const pct = inf ? 100 : ((radius - min) / (max - min)) * 100;
       sliderFill.style.width = pct + '%';
       document.querySelectorAll('#presets .preset').forEach(b => {
-        b.classList.toggle('on', +b.dataset.r === radius);
+        b.classList.toggle('on', !inf && +b.dataset.r === radius);
       });
     }
 
@@ -374,7 +375,7 @@
       boardHidden.textContent = hidden;
 
       if (visible.length === 0) {
-        boardList.innerHTML = `<li class="board-empty mono">No garages within ${radius}m — try a wider radius.</li>`;
+        boardList.innerHTML = `<li class="board-empty mono">No garages within ${isFinite(radius) ? radius + 'm' : '∞'} — try a wider radius.</li>`;
         return;
       }
 
@@ -452,7 +453,12 @@
     });
 
     function updateMapForRadius() {
-      radiusCircle.setRadius(radius);
+      if (isFinite(radius)) {
+        radiusCircle.setRadius(radius);
+        if (!map.hasLayer(radiusCircle)) radiusCircle.addTo(map);
+      } else if (map.hasLayer(radiusCircle)) {
+        map.removeLayer(radiusCircle);
+      }
       lotMarkers.forEach(({ marker, lot }) => {
         const within = lot.dist <= radius;
         marker.setOpacity(within ? 1 : 0.35);
@@ -467,7 +473,11 @@
 
     // ---- Controls ----
     function setRadius(r) {
-      radius = Math.max(100, Math.min(3000, Math.round(r / 10) * 10));
+      if (!isFinite(r)) {
+        radius = Infinity;
+      } else {
+        radius = Math.max(100, Math.min(3000, Math.round(r / 10) * 10));
+      }
       renderRadius();
       renderBoard();
       updateMapForRadius();
@@ -475,7 +485,11 @@
 
     radiusRange.addEventListener('input', e => setRadius(+e.target.value));
     document.querySelectorAll('#presets .preset').forEach(b => {
-      b.addEventListener('click', () => setRadius(+b.dataset.r));
+      b.addEventListener('click', () => {
+        const r = +b.dataset.r;
+        // Clicking the active preset again clears the radius filter (∞).
+        setRadius(isFinite(radius) && r === radius ? Infinity : r);
+      });
     });
 
     $('locate-btn').addEventListener('click', () => {
