@@ -81,7 +81,6 @@ var testLots = []parkingLot{
 	},
 }
 
-// ParkenDD occasionally reports Free > Total (impossible); clamp to Total.
 func correctedFree(lot parkingLot) int {
 	if lot.Free > lot.Total {
 		return lot.Total
