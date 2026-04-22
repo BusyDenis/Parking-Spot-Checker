@@ -23,9 +23,9 @@ type parkingLot struct {
 	Address string `json:"address"`
 	Coords  coords `json:"coords"`
 	Free    int    `json:"free"`
+	Total   int    `json:"total"`
 	Name    string `json:"name"`
 	State   string `json:"state"`
-	Total   int    `json:"total"`
 }
 
 type coords struct {
@@ -44,6 +44,41 @@ type pageData struct {
 	LastDownloaded string
 	LastUpdated    string
 	Lots           []parkingLot `json:"lots"`
+}
+
+var fixtureLots = []parkingLot{
+	{
+		Name:    "Test Lot Overfreed",
+		Address: "Bahnhofstrasse 1, Zurich",
+		Coords:  coords{Lat: 47.3769, Lng: 8.5417},
+		Free:    62,
+		Total:   60,
+		State:   "open",
+	},
+	{
+		Name:    "Test Lot Normal",
+		Address: "Paradeplatz 2, Zurich",
+		Coords:  coords{Lat: 47.3697, Lng: 8.5387},
+		Free:    10,
+		Total:   50,
+		State:   "open",
+	},
+	{
+		Name:    "Test Lot Busy",
+		Address: "Bürkliplatz 1, Zurich",
+		Coords:  coords{Lat: 47.3661, Lng: 8.5420},
+		Free:    10,
+		Total:   50,
+		State:   "open",
+	},
+}
+
+// ParkenDD occasionally reports Free > Total (impossible); clamp to Total.
+func correctedFree(lot parkingLot) int {
+	if lot.Free > lot.Total {
+		return lot.Total
+	}
+	return lot.Free
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -78,6 +113,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data.Lots = append(data.Lots, fixtureLots...)
+
 	filteredLots := data.Lots
 
 	radiusValue, radiusErr := strconv.ParseFloat(radius, 64)
@@ -93,6 +130,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				filteredLots = append(filteredLots, lot)
 			}
 		}
+	}
+
+	for i, lot := range filteredLots {
+		filteredLots[i].Free = correctedFree(lot)
 	}
 
 	page := pageData{
