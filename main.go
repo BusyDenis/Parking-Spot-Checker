@@ -7,7 +7,10 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
+	"sync"
+	"time"
 )
 
 var funcMap = template.FuncMap{
@@ -18,8 +21,13 @@ var funcMap = template.FuncMap{
 }
 
 const API_URL = "https://api.parkendd.de/Zuerich"
+const cacheFilePath = "response/response.json"
+const cacheRefreshInterval = time.Minute
 
 var templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("*.html"))
+
+var cacheMu sync.RWMutex
+var cachedData parkingResponse
 
 type parkingLot struct {
 	Address string `json:"address"`
@@ -81,6 +89,102 @@ var testLots = []parkingLot{
 		Total:   50,
 		State:   "open",
 	},
+}
+
+func hasCachedData(data parkingResponse) bool {
+	return len(data.Lots) > 0 || data.LastDownloaded != "" || data.LastUpdated != ""
+}
+
+func saveCacheToFile(data parkingResponse) error {
+	if err := os.MkdirAll(filepath.Dir(cacheFilePath), 0755); err != nil {
+		return err
+	}
+
+	file, err := os.Create(cacheFilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(data)
+}
+
+func loadCacheFromFile() (parkingResponse, error) {
+	file, err := os.Open(cacheFilePath)
+	if err != nil {
+		return parkingResponse{}, err
+	}
+	defer file.Close()
+
+	var data parkingResponse
+	if err := json.NewDecoder(file).Decode(&data); err != nil {
+		return parkingResponse{}, err
+	}
+	return data, nil
+}
+
+func refreshCacheOnce() error {
+	data, err := fetchParkingData()
+	if err != nil {
+		return err
+	}
+
+	cacheMu.Lock()
+	cachedData = data
+	cacheMu.Unlock()
+
+	return saveCacheToFile(data)
+}
+
+func getParkingData() (parkingResponse, error) {
+	cacheMu.RLock()
+	data := cachedData
+	cacheMu.RUnlock()
+
+	if hasCachedData(data) {
+		return data, nil
+	}
+
+	if err := refreshCacheOnce(); err != nil {
+		return parkingResponse{}, err
+	}
+
+	cacheMu.RLock()
+	data = cachedData
+	cacheMu.RUnlock()
+	return data, nil
+}
+
+func startCacheRefresher() {
+	go func() {
+		ticker := time.NewTicker(cacheRefreshInterval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if err := refreshCacheOnce(); err != nil {
+				log.Printf("cache refresh failed: %v", err)
+			}
+		}
+	}()
+}
+
+func initCache() {
+	data, err := loadCacheFromFile()
+	if err == nil {
+		cacheMu.Lock()
+		cachedData = data
+		cacheMu.Unlock()
+	} else if !os.IsNotExist(err) {
+		log.Printf("cache file read failed: %v", err)
+	}
+
+	if err := refreshCacheOnce(); err != nil {
+		log.Printf("initial cache refresh failed, using existing cache if present: %v", err)
+	}
+
+	startCacheRefresher()
 }
 
 func correctedFree(lot parkingLot) int {
@@ -155,16 +259,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	radius, latitude, longitude := httpHandler(r)
 
-	data, err := fetchParkingData()
+	data, err := getParkingData()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Failed to fetch data", http.StatusBadGateway)
 		return
 	}
 
-	data.Lots = append(data.Lots, testLots...)
+	// Copy lots first so request-level mutations never touch shared cache memory.
+	lots := append([]parkingLot(nil), data.Lots...)
+	lots = append(lots, testLots...)
 
-	filteredLots := filterLots(data.Lots, radius, latitude, longitude)
+	filteredLots := filterLots(lots, radius, latitude, longitude)
 
 	for i, lot := range filteredLots {
 		filteredLots[i].Free = correctedFree(lot)
@@ -206,6 +312,8 @@ func distanceInMeters(lat1 float64, lng1 float64, lat2 float64, lng2 float64) fl
 }
 
 func main() {
+	initCache()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
